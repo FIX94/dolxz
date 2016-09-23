@@ -1,0 +1,64 @@
+
+PREFIX = powerpc-eabi-
+
+ifeq ($(OS),Windows_NT)
+	BIN2H = ../bin2h/bin2h.exe
+else
+	BIN2H = ../bin2h/bin2h
+endif
+
+AR = $(PREFIX)ar
+AS = $(PREFIX)as
+CC = $(PREFIX)gcc
+CXX = $(PREFIX)g++
+LD = $(PREFIX)ld
+OBJCOPY = $(PREFIX)objcopy
+RANLIB = $(PREFIX)ranlib
+STRIP = $(PREFIX)strip
+
+MACHDEP = -mcpu=750 -mno-eabi -mhard-float -DHW_RVL=1
+CFLAGS = $(MACHDEP) -O2 -Werror -Wall
+LDFLAGS = $(MACHDEP) -n -nostartfiles -nostdlib -Wl,-T,wii.ld -L.
+ASFLAGS = -DHW_RVL=1 -D_LANGUAGE_ASSEMBLY
+
+TARGET_LINKED = loader.elf
+TARGET_DOL = loader.dol
+TARGET_TMP = loader_wii.bin
+TARGET = loader_wii.h
+
+OBJS = crt0.o cache_asm.o system_asm.o argv.o main.o xz_crc32.o xz_dec_bcj.o xz_dec_lzma2.o xz_dec_stream.o 
+
+DEPDIR = .deps
+
+LIBS = 
+
+all: $(TARGET)
+
+%.o: %.s
+	@echo " ASSEMBLE    $<"
+	@$(CC) $(CFLAGS) $(DEFINES) $(ASFLAGS) -c $< -o $@
+
+%.o: %.S
+	@echo " ASSEMBLE    $<"
+	@$(CC) $(CFLAGS) $(DEFINES) $(ASFLAGS) -c $< -o $@
+
+%.o: %.c
+	@echo " COMPILE     $<"
+	@$(CC) $(CFLAGS) $(DEFINES) -c $< -o $@
+
+$(TARGET_LINKED): $(OBJS)
+	@echo " LINK        $@"
+	@$(CC) -g -o $@ $(LDFLAGS) $(OBJS) $(LIBS)
+
+$(TARGET_DOL): $(TARGET_LINKED)
+	@echo " ELF2DOL     $@"
+	@elf2dol $< $@
+
+$(TARGET): $(TARGET_DOL)
+	@echo " BIN2H       $@"
+	@mv $< $(TARGET_TMP)
+	@$(BIN2H) $(TARGET_TMP)
+	@mv $(TARGET_TMP) $<
+
+clean:
+	rm -rf $(TARGET_LINKED) $(TARGET_DOL) $(TARGET) $(OBJS) $(DEPDIR)
