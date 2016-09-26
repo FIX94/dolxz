@@ -163,18 +163,35 @@ void _main()
 	pChar('2');
 	struct xz_buf b;
 	//as defined in the .ld file
-	u32 inPos = 0x80040000;
+#if defined(HIGH)
+	u32 inPos = 0x81320000;
+#elif defined(LOW)
+	u32 inPos = 0x80020000;
+#endif
 	b.in = (void*)inPos;
 	pHex(*(vu32*)b.in);
 	b.in_pos = 0;
 	b.in_size = dol_size;
+	
+#if defined(HIGH)
+	//start decompression at lowest MEM1 point
+#if defined(HW_RVL)
+	u32 outPos = 0x80003400;
+#elif defined(HW_DOL)
+	u32 outPos = 0x80003100;
+#endif
+	//our loader comes above this
+	u32 maxOutSize = 0x81300000 - outPos;
+#elif defined(LOW)
 	//use remaining MEM1 for decompression
 	u32 outPos = inPos + ALIGN32(dol_size);
+	//dolloader/args come above this
+	u32 maxOutSize = 0x817C0000 - outPos;
+#endif
 	b.out = (void*)outPos;
 	b.out_pos = 0;
-	//dolloader/args come above this
-	b.out_size = 0x817C0000 - outPos;
-	xz_dec_run(decStr, &b)
+	b.out_size = maxOutSize;
+	xz_dec_run(decStr, &b);
 	pHex(b.out_pos);
 	xz_dec_end(decStr);
 	//out_pos after decompress is uncompressed total

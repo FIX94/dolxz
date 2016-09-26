@@ -9,11 +9,10 @@
 #include <lzma.h>
 #include <stdbool.h>
 
-#if defined(HW_DOL)
 #include "loader/loader_cube.h"
-#elif defined(HW_RVL)
+#include "loader/loader_cube_high.h"
 #include "loader/loader_wii.h"
-#endif
+#include "loader/loader_wii_high.h"
 
 typedef struct _dolheader {
 	unsigned int text_pos[7];
@@ -100,26 +99,45 @@ static bool compress(lzma_stream *strm, FILE *infile, FILE *outfile)
 	}
 }
 
-#if defined(HW_DOL)
-static const void *loader_dol = loader_cube;
-static const size_t loader_size = loader_cube_size;
-static const char *prgname = "cubexz";
-#elif defined(HW_RVL)
-static const void *loader_dol = loader_wii;
-static const size_t loader_size = loader_wii_size;
-static const char *prgname = "wiixz";
-#endif
-
 static void printusage()
 {
-	printf("Usage: %s <in.dol> <out.dol>\n", prgname);
+	printf("Usage:\n"
+		"dolxz <in.dol> <out.dol> <system> <additional options>\n\n"
+		"Systems:\n"
+		"-cube - Create GameCube compatible DOL File\n"
+		"-wii - Create Wii compatible DOL File\n\n"
+		"Additional Options:\n"
+		"-high - Use 0x81300000 as Entrypoint instead of 0x80003100/0x80003400\n");
+}
+
+enum
+{
+	SYS_NONE = 0,
+	SYS_CUBE,
+	SYS_WII
+};
+
+int sysin = SYS_NONE;
+int high = 0;
+static void parseCmds(int argc, char *argv[])
+{
+	int i;
+	for(i = 1; i < argc; i++)
+	{
+		if(memcmp(argv[i],"-cube",6) == 0)
+			sysin = SYS_CUBE;
+		else if(memcmp(argv[i],"-wii",5) == 0)
+			sysin = SYS_WII;
+		else if(memcmp(argv[i],"-high",6) == 0)
+			high = 1;
+	}
 }
 
 int main(int argc, char *argv[])
 {
-	printf("%s v1.0 by FIX94\n", prgname);
+	printf("dolxz v1.1 by FIX94\n\n");
 
-	if(argc != 3)
+	if(argc < 4)
 	{
 		printusage();
 		return -1;
@@ -138,7 +156,52 @@ int main(int argc, char *argv[])
 		printusage();
 		return -3;
 	}
-	printf("Preparing...\n");
+
+	parseCmds(argc, argv);
+	if(sysin == SYS_NONE)
+	{
+		printf("No system specified!\n");
+		printusage();
+		return -3;
+	}
+
+	int loader_size = 0;
+	const void *loader_dol = NULL;
+	if(sysin == SYS_CUBE)
+	{
+		printf("Building GameCube DOL\n");
+		if(high)
+		{
+			loader_size = loader_cube_high_size;
+			loader_dol = loader_cube_high;
+		}
+		else
+		{
+			loader_size = loader_cube_size;
+			loader_dol = loader_cube;
+		}
+	}
+	else
+	{
+		printf("Building Wii DOL\n");
+		if(high)
+		{
+			loader_size = loader_wii_high_size;
+			loader_dol = loader_wii_high;
+		}
+		else
+		{
+			loader_size = loader_wii_size;
+			loader_dol = loader_wii;
+		}
+	}
+	unsigned int dolMemPos = 0x80020000;
+	if(high)
+	{
+		printf("Using High Entrypoint\n");
+		dolMemPos = 0x81320000;
+	}
+	printf(" \nPreparing...\n");
 
 	char *dolBuf = malloc(loader_size);
 	memcpy(dolBuf, loader_dol, loader_size);
@@ -149,7 +212,7 @@ int main(int argc, char *argv[])
 	int i;
 	for (i = 0; i < 11; i++)
 	{
-		if (__builtin_bswap32(dolfile->data_start[i]) == 0x80040000) {
+		if (__builtin_bswap32(dolfile->data_start[i]) == dolMemPos) {
 			dolWritePos = __builtin_bswap32(dolfile->data_pos[i]);
 			dolDataLoc = i;
 			break;

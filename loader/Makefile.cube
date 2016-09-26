@@ -7,6 +7,18 @@ else
 	BIN2H = ../bin2h/bin2h
 endif
 
+ifeq ($(high), 1)
+	LDSCRIPT = cubehigh.ld
+	TARGET_TMP = loader_cube_high.bin
+	TARGET = loader_cube_high.h
+	DEFINES = -DHIGH=1
+else
+	LDSCRIPT = cube.ld
+	TARGET_TMP = loader_cube.bin
+	TARGET = loader_cube.h
+	DEFINES = -DLOW=1
+endif
+
 AR = $(PREFIX)ar
 AS = $(PREFIX)as
 CC = $(PREFIX)gcc
@@ -18,13 +30,11 @@ STRIP = $(PREFIX)strip
 
 MACHDEP = -mcpu=750 -mno-eabi -mhard-float -DHW_DOL=1
 CFLAGS = $(MACHDEP) -O2 -Werror -Wall
-LDFLAGS = $(MACHDEP) -n -nostartfiles -nostdlib -Wl,-T,cube.ld -L.
+LDFLAGS = $(MACHDEP) -n -nostartfiles -nostdlib -Wl,-T,$(LDSCRIPT) -L.
 ASFLAGS = -DHW_DOL=1 -D_LANGUAGE_ASSEMBLY
 
 TARGET_LINKED = loader.elf
 TARGET_DOL = loader.dol
-TARGET_TMP = loader_cube.bin
-TARGET = loader_cube.h
 
 OBJS = crt0.o cache_asm.o system_asm.o argv.o main.o xz_crc32.o xz_dec_bcj.o xz_dec_lzma2.o xz_dec_stream.o 
 

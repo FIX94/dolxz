@@ -20,21 +20,23 @@ echo Building Cube Main Loader
 echo.
 make -f Makefile.cube clean
 make -f Makefile.cube
+make -f Makefile.cube high=1 clean
+make -f Makefile.cube high=1
 
 echo.
 echo Building Wii Main Loader
 echo.
 make -f Makefile.wii clean
 make -f Makefile.wii
+make -f Makefile.wii high=1 clean
+make -f Makefile.wii high=1
 
 cd ..
 echo.
 echo Building Executable
 echo.
-echo cubexz
-gcc -DHW_DOL=1 -Wall -static -O2 -s main.c -llzma -o cubexz
-echo wiixz
-gcc -DHW_RVL=1 -Wall -static -O2 -s main.c -llzma -o wiixz
+echo dolxz
+gcc -Wall -static -O2 -s main.c -llzma -o dolxz
 echo.
 
 pause

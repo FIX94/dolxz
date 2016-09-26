@@ -30,7 +30,7 @@ SECTIONS {
 	.sdata : { *(.sdata) *(.sdata.*) } :dat
 	.rodata : { *(.rodata) *(.rodata.*) } :dat
 
-	. = 0x80040000;
+	. = 0x80020000;
 	.rodata1 : { *(.rodata1) } :dat2
 }
 
