@@ -33,7 +33,7 @@ static void sync_cache(void *p, u32 n)
 		asm("dcbst 0,%0 ; icbi 0,%0" : : "b"(p));
 		p += 32;
 	}
-	asm("sync ; isync");
+	asm("sc");
 }
 
 void *_memset(void *ptr, int c, int size)

@@ -135,7 +135,7 @@ static void parseCmds(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-	printf("dolxz v1.1 by FIX94\n\n");
+	printf("dolxz v1.2 by FIX94\n\n");
 
 	if(argc < 4)
 	{

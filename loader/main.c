@@ -155,8 +155,16 @@ void pHex(u32 h)
 
 #endif
 
+extern u8 systemcallhandler_start[],systemcallhandler_end[];
 void _main() 
 {
+	//make sure "sc" handler is installed
+	void *syscallMem = (void*)0x80000C00;
+	int syscallLen = (systemcallhandler_end-systemcallhandler_start);
+	memcpy(syscallMem,systemcallhandler_start,syscallLen);
+	DCFlushRangeNoSync(syscallMem,syscallLen);
+	ICInvalidateRange(syscallMem,syscallLen);
+
 	pChar('1');
 	xz_crc32_init();
 	struct xz_dec *decStr = xz_dec_init(XZ_SINGLE,0);
@@ -206,7 +214,7 @@ void _main()
 	pChar('3');
 	//done with setup, start up dolloader
 	memcpy((void*)0x817C0000, dolloader, dolloader_size);
-	DCFlushRange((void*)0x817C0000, dolloader_size);
+	DCFlushRangeNoSync((void*)0x817C0000, dolloader_size);
 	ICInvalidateRange((void*)0x817C0000, dolloader_size);
 	__asm__ volatile(
 		"lis 3, 0x817C\n"

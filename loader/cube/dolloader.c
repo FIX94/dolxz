@@ -49,7 +49,7 @@ static void sync_cache(void *p, u32 n)
 		asm("dcbst 0,%0 ; icbi 0,%0" : : "b"(p));
 		p += 32;
 	}
-	asm("sync ; isync");
+	asm("sc");
 }
 
 static void sync_before_read(void *p, u32 n)
@@ -64,7 +64,7 @@ static void sync_before_read(void *p, u32 n)
 		asm("dcbf 0,%0" : : "b"(p));
 		p += 32;
 	}
-	asm("sync");
+	asm("sc");
 }
 
 void *_memset(void *ptr, int c, int size)
