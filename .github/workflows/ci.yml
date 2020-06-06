@@ -1,0 +1,30 @@
+name: Continuous Integration
+
+on: [push, pull_request]
+
+jobs:
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitppc:latest
+
+    steps:
+
+    - name: Checkout the Git repository
+      uses: actions/checkout@v2
+
+    - name: Install Linux packages
+      run: apt-get update && apt-get install -y g++-multilib liblzma-dev
+
+    - name: Build applications
+      run: |
+        export PATH=/opt/devkitpro/tools/bin:$PATH
+        (cd bin2h && bash make.sh)
+        bash build.sh
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: dolxz-linux
+        path: dolxz
