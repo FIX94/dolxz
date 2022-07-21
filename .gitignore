@@ -1,0 +1,14 @@
+*.o
+dolxz
+loader/cube/dolloader.bin
+loader/cube/dolloader.elf
+loader/cube/dolloader.h
+loader/loader.dol
+loader/loader.elf
+loader/loader_cube.h
+loader/loader_cube_high.h
+loader/loader_wii.h
+loader/loader_wii_high.h
+loader/wii/dolloader.bin
+loader/wii/dolloader.elf
+loader/wii/dolloader.h
